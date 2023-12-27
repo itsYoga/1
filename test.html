@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C++ Code Example</title>
+    <style>
+        pre {
+            display: none;
+            background-color: #f4f4f4;
+            padding: 10px;
+            border: 1px solid #ccc;
+            white-space: pre-wrap;
+            font-family: "Courier New", Courier, monospace;
+        }
+    </style>
+</head>
+<body>
+
+<pre id="cppCode1">
+#include &lt;iostream&gt;
+#include &lt;vector&gt;
+#include &lt;algorithm&gt;
+
+using namespace std;
+
+class ListNode {
+public:
+    int coef;
+    int expon;
+    ListNode *next;
+
+    ListNode() : coef(0), expon(0), next(nullptr) {}
+    ListNode(int _coef, int _expon) : coef(_coef), expon(_expon), next(nullptr) {}
+    ListNode(int _coef, int _expon, ListNode *next) : coef(_coef), expon(_expon), next(next) {}
+};
+
+ListNode *heada = new ListNode();
+ListNode *headb = new ListNode();
+
+void printTerm(int coef, int expon, bool &hasPrint) {
+    if (coef != 0) {
+        if (expon > 1) {
+            cout << (hasPrint ? " + " : "") << coef << "x^" << expon;
+        } else if (expon == 1) {
+            cout << (hasPrint ? " + " : "") << coef << "x";
+        } else {
+            cout << (hasPrint ? " + " : "") << coef;
+        }
+        hasPrint = true;
+    }
+}
+
+void addFunc(ListNode *a, ListNode *b) {
+    bool hasPrint = false;
+    while (a && b) {
+        if (a->expon > b->expon) {
+            printTerm(a->coef, a->expon, hasPrint);
+            a = a->next;
+        } else if (a->expon < b->expon) {
+            printTerm(b->coef, b->expon, hasPrint);
+            b = b->next;
+        } else {
+            printTerm(a->coef + b->coef, a->expon, hasPrint);
+            a = a->next;
+            b = b->next;
+        }
+    }
+    while (a) {
+        printTerm(a->coef, a->expon, hasPrint);
+        a = a->next;
+    }
+    while (b) {
+        printTerm(b->coef, b->expon, hasPrint);
+        b = b->next;
+    }
+    cout << "\n";
+}
+
+void multiply(ListNode *a, ListNode *b) {
+    bool hasPrint = false;
+    vector&lt;pair&lt;int, int&gt;&gt; tmp;
+    while (a) {
+        ListNode *currentB = headb->next;
+        while (currentB) {
+            tmp.push_back({a->coef * currentB->coef, a->expon + currentB->expon});
+            currentB = currentB->next;
+        }
+        a = a->next;
+    }
+    sort(tmp.begin(), tmp.end(), [](const pair&lt;int, int&gt; &aa, const pair&lt;int, int&gt; &bb) {
+        return aa.second > bb.second;
+    });
+    for (int i = 0; i < tmp.size(); i++) {
+        int idx = i + 1;
+        while (idx < tmp.size() && tmp[i].second == tmp[idx].second) {
+            tmp[i].first += tmp[idx].first;
+            tmp[idx++].first = 0;
+        }
+    }
+    for (const auto &term : tmp) {
+        printTerm(term.first, term.second, hasPrint);
+    }
+    cout << "\n";
+}
+
+void solve() {
+    bool flag = false;
+    int coef, expon;
+    vector&lt;pair&lt;int, int&gt;&gt; va,vb;
+    while (cin >> coef) {
+        if (coef == -1) {
+            if (flag) {
+                break;
+            }
+            flag = true;
+            continue;
+        }
+        cin >> expon;
+        if (!flag) {
+            va.push_back({coef, expon});
+        } else {
+            vb.push_back({coef, expon});
+        }
+    }
+    sort(va.begin(), va.end(), [](const pair&lt;int, int&gt; &aa, const pair&lt;int, int&gt; &bb) {
+        return aa.second > bb.second;
+    });
+    sort(vb.begin(), vb.end(), [](const pair&lt;int, int&gt; &aa, const pair&lt;int, int&gt; &bb) {
+        return aa.second > bb.second;
+    });
+
+    ListNode *a = heada;
+    ListNode *b = headb;
+
+    for (const auto &term : va) {
+        b->next = new ListNode(term.first, term.second);
+        b = b->next;
+    }
+    for (const auto &term : vb) {
+        a->next = new ListNode(term.first, term.second);
+        a = a->next;
+    }
+
+    cout << "add = ";
+    addFunc(heada->next, headb->next);
+
+    cout << "mult = ";
+    multiply(heada->next, headb->next);
+}
+
+int main() {
+    solve();
+
+    return 0;
+}
+</pre>
+
+<button onclick="copyCode(1)">1</button>
+
+<pre id="cppCode2">
+#include &lt;iostream&gt;
+#include &lt;vector&gt;
+#include &lt;algorithm&gt;
+
+#define MXN 100005
+
+using namespace std;
+
+struct Solution {
+    int n, step, dfn[MXN], low[MXN];
+    vector&lt;int&gt; edge[MXN];
+
+    void init(int _n) {
+        n = _n;
+        step = 0;
+        for (int i = 0; i < n; i++) {
+            edge[i].clear();
+            dfn[i] = low[i] = -1;
+        }
+    }
+
+    void addEdge(int u, int v) {
+        edge[u].push_back(v);
+        edge[v].push_back(u);
+    }
+
+    void dfs(int x, int f) {
+        dfn[x] = low[x] = step++;
+        for (auto i : edge[x]) {
+            if (i == f) {
+                continue;
+            }
+            if (dfn[i] == -1) {
+                dfs(i, x);
+                low[x] = min(low[x], low[i]);
+            } else {
+                low[x] = min(low[x], dfn[i]);
+            }
+        }
+    }
+
+    void printSol() {
+        cout << "    ";
+        for (int i = 0; i < n; i++) {
+            cout << i << " \n"[i == n - 1];
+        }
+        cout << "dfn ";
+        for (int i = 0; i < n; i++) {
+            cout << dfn[i] << " \n"[i == n - 1];
+        }
+        cout << "low ";
+        for (int i = 0; i < n; i++) {
+            cout << low[i] << " \n"[i == n - 1];
+        }
+    }
+
+    void solve() {
+        for (int i = 3; i < n; i++) {
+            if (dfn[i] == -1) {
+                dfs(i, i);
+            }
+        }
+        for (int i = 0; i < 3; i++) {
+            if (dfn[i] == -1) {
+                dfs(i, i);
+            }
+        }
+        printSol();
+    }
+};
+
+void solve() {
+    int u, v, mx = -1;
+    vector&lt;pair&lt;int, int>> edge;
+
+    while (cin >> u >> v) {
+        edge.push_back({u, v});
+        mx = max({mx, u, v});
+    }
+
+    sort(edge.begin(), edge.end());
+    Solution graph;
+    graph.init(mx + 1);
+
+    for (auto i : edge) {
+        graph.addEdge(i.first, i.second);
+    }
+
+    graph.solve();
+}
+
+int main() {
+    solve();
+    return 0;
+}
+
+</pre>
+
+<button onclick="copyCode(2)">2</button>
+
+<script>
+    function copyCode(codeNumber) {
+        const code = document.getElementById("cppCode" + codeNumber).innerText;
+        navigator.clipboard.writeText(code)
+    }
+</script>
+
+</body>
+</html>
