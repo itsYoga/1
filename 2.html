@@ -420,6 +420,90 @@ int main() {
     </pre>
     
     <button onclick="copyCode(4)">4</button>
+
+<pre id="cppCode5">
+#include &lt;iostream&gt;
+using namespace std;
+
+const int MAX_SIZE = 200001;
+
+long long sums[MAX_SIZE];
+int parents[MAX_SIZE], ranks[MAX_SIZE], mapping[MAX_SIZE];
+
+int FindParent(int x) {
+    return (parents[x] == x ? x : parents[x] = FindParent(parents[x]));
+}
+
+bool Union(int x, int y) {
+    x = FindParent(x);
+    y = FindParent(y);
+
+    if (x == y)
+        return false;
+
+    if (ranks[x] < ranks[y]) {
+        ranks[x] += ranks[y];
+        sums[x] += sums[y];
+        parents[y] = x;
+    } else {
+        ranks[y] += ranks[x];
+        sums[y] += sums[x];
+        parents[x] = y;
+    }
+
+    return true;
+}
+
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    int number, commands, command, index1, index2, parent1, parent2;
+
+    while (cin >> number >> commands) {
+        for (int i = 1; i <= number + commands; ++i) {
+            ranks[i] = 1;
+            parents[i] = mapping[i] = sums[i] = i;
+        }
+
+        while (commands--) {
+            cin >> command >> index1;
+
+            switch (command) {
+                case 1:
+                    cin >> index2;
+                    Union(mapping[index1], mapping[index2]);
+                    break;
+                case 2:
+                    cin >> index2;
+                    parent1 = FindParent(mapping[index1]);
+                    parent2 = FindParent(mapping[index2]);
+
+                    if (parent1 != parent2) {
+                        sums[parent1] -= index1;
+                        --ranks[parent1];
+
+                        ++number;
+                        mapping[index1] = number;
+                        sums[mapping[index1]] = index1;
+                        ranks[mapping[index1]] = 1;
+
+                        Union(mapping[index1], mapping[index2]);
+                    }
+                    break;
+                default:
+                    index2 = FindParent(mapping[index1]);
+                    cout << ranks[index2] << ' ' << sums[index2] << '\n';
+            }
+        }
+    }
+
+    return 0;
+}
+
+    </pre>
+    
+    <button onclick="copyCode(5)">5</button>
 <script>
     function copyCode(codeNumber) {
         const code = document.getElementById("cppCode" + codeNumber).innerText;
